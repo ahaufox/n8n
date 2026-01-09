@@ -1,0 +1,3 @@
+[submodule "n8n_src"]
+	path = n8n_src
+	url = https://github.com/ahaufox/n8n.git
