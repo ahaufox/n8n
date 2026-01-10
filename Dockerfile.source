@@ -1,0 +1,81 @@
+# n8n 源码构建 Dockerfile
+# 对齐官方 n8nio/base 并优化，[修改builder务必二次确认，不要直接修改！]
+ARG NODE_VERSION=22.21.1
+# --- 构建阶段 ---
+FROM node:${NODE_VERSION}-alpine3.22 AS builder
+
+# 1. 安装构建基础依赖
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && \
+    apk add --no-cache \
+    git \
+    python3 \
+    make \
+    g++ \
+    libc6-compat \
+    busybox-binsh \
+    bash
+
+# 2. 配置 Corepack 和 pnpm
+RUN corepack enable && corepack prepare pnpm@10.22.0 --activate
+
+# 3. 设置构建环境变量
+ENV DOCKER_BUILD=true
+ENV pnpm_config_registry=https://registry.npmmirror.com
+ENV NODE_ENV=production
+
+WORKDIR /app
+
+# 4. 复制 monorepo 核心配置文件
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json .npmrc ./
+COPY scripts/ ./scripts/
+COPY patches/ ./patches/
+COPY packages/ ./packages/
+
+# 5. 安装所有依赖 (包括 devDependencies 用于构建)
+RUN pnpm install --frozen-lockfile
+
+# 6. 执行编译 (使用修复后的脚本)
+COPY . .
+RUN node scripts/build-n8n.mjs
+
+# --- 生产阶段 ---
+FROM node:22-alpine
+
+ARG N8N_VERSION=snapshot
+ARG N8N_RELEASE_TYPE=dev
+
+ENV NODE_ENV=production
+ENV N8N_RELEASE_TYPE=${N8N_RELEASE_TYPE}
+ENV N8N_VERSION=${N8N_VERSION}
+ENV NODE_ICU_DATA=/usr/local/lib/node_modules/full-icu
+ENV SHELL=/bin/sh
+
+WORKDIR /home/node
+
+# 1. 安装 n8n 运行时依赖及 Python 3
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && \
+    apk add --no-cache \
+    python3 \
+    graphicsmagick \
+    tini \
+    tzdata \
+    ca-certificates \
+    libc6-compat \
+    busybox-binsh && \
+    npm install -g full-icu@1.5.0
+
+# 2. 从 builder 阶段复制编译成果
+COPY --from=builder /app/compiled /usr/local/lib/node_modules/n8n
+COPY --from=builder /app/docker/images/n8n/docker-entrypoint.sh /
+
+# 3. 运行环境配置
+RUN cd /usr/local/lib/node_modules/n8n && \
+    npm rebuild sqlite3 && \
+    ln -s /usr/local/lib/node_modules/n8n/bin/n8n /usr/local/bin/n8n && \
+    mkdir -p /home/node/.n8n && \
+    chown -R node:node /home/node && \
+    rm -rf /root/.npm /tmp/* /root/.cache
+
+EXPOSE 5678/tcp
+USER node
+ENTRYPOINT ["tini", "--", "/docker-entrypoint.sh"]

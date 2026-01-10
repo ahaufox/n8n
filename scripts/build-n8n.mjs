@@ -19,8 +19,12 @@ const excludeTestController =
 	process.env.CI === 'true' && process.env.INCLUDE_TEST_CONTROLLER !== 'true';
 
 // Disable verbose output and force color only if not in CI
-$.verbose = !isCI;
-process.env.FORCE_COLOR = isCI ? '0' : '1';
+$.verbose = true;
+$.shell = 'bash';
+if (typeof $.quote !== 'function') {
+	$.quote = (v) => `'${String(v).replace(/'/g, "'\\''")}'`;
+}
+process.env.FORCE_COLOR = '1';
 
 const scriptDir = path.dirname(new URL(import.meta.url).pathname);
 const isInScriptsDir = path.basename(scriptDir) === 'scripts';
@@ -126,6 +130,7 @@ try {
 } catch (error) {
 	console.error(chalk.red('\n🛑 BUILD PROCESS FAILED!'));
 	console.error(chalk.red('An error occurred during the build process:'));
+	console.error(error);
 	process.exit(1);
 }
 

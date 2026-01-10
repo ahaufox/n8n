@@ -2,7 +2,6 @@ import { DataSource } from '@n8n/typeorm';
 import * as fs from 'fs';
 import type { IExecuteFunctions, INodeExecutionData } from 'n8n-workflow';
 import { BINARY_ENCODING, NodeOperationError } from 'n8n-workflow';
-import * as sqlite3 from 'sqlite3';
 import * as temp from 'temp';
 
 export async function getSqliteDataSource(
@@ -35,6 +34,7 @@ export async function getSqliteDataSource(
 	fs.writeFileSync(tempDbPath, bufferString);
 
 	// Initialize a new SQLite database from the temp file
+	const sqlite3 = await import('sqlite3');
 	const tempDb = new sqlite3.Database(tempDbPath, (error: Error | null) => {
 		if (error) {
 			throw new NodeOperationError(this.getNode(), 'Could not connect to database');

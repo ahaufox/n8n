@@ -1,27 +1,43 @@
-# Whitelist approach: ignore everything, then allow only what Docker builds need
-# This reduces build context from ~900MB to just what's required
+# n8n 源码构建 Dockerfile .dockerignore
+# 已修改以允许 monorepo 构建所需的源码文件
 
-# Ignore everything first
-*
+# 忽略常见的无用文件
+node_modules/
+.git/
+.vscode/
+.idea/
+*.bak
+*.swp
+dist/
 
-# === n8n main image (docker/images/n8n/Dockerfile) ===
-!compiled
+# 允许 monorepo 配置文件
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+!turbo.json
+!.npmrc
+!scripts/
+!scripts/**
+
+# 允许源码构建所需的所有包和补丁
+!packages/
+!packages/**
+!patches/
+!patches/**
+
+# 允许 Docker 构建文件
+!docker/
+!docker/**
+
+# 允许预编译文件（为了与官方构建保持兼容）
+!compiled/
 !compiled/**
+
+# 允许 pnpm store 缓存（用于离线构建）
+!.pnpm-store/
+!.pnpm-store/**
+
+# 其他必要文件
 !THIRD_PARTY_LICENSES.md
-
-# === runners image (docker/images/runners/Dockerfile + Dockerfile.distroless) ===
-!dist
-!dist/task-runner-javascript
-!dist/task-runner-javascript/**
-!packages
-!packages/@n8n
-!packages/@n8n/task-runner-python
-!packages/@n8n/task-runner-python/**
-
-# === Docker build files (entrypoints, configs) ===
-!docker
-!docker/images
-!docker/images/n8n
-!docker/images/n8n/docker-entrypoint.sh
-!docker/images/runners
-!docker/images/runners/n8n-task-runners.json
+!.github/
+!.github/**
