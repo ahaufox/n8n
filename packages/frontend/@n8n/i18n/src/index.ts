@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-this-alias */
 import type { INodeProperties, INodePropertyCollection, INodePropertyOptions } from 'n8n-workflow';
 import { ref } from 'vue';
-import { createI18n } from 'vue-i18n';
+import { createI18n, I18n } from 'vue-i18n';
 
 import englishBaseText from './locales/en.json';
 import type { BaseTextKey, LocaleMessages, INodeTranslationHeaders } from './types';
@@ -14,7 +14,7 @@ import {
 
 export type * from './types';
 
-export const i18nInstance = createI18n({
+export const i18nInstance: I18n = createI18n({
 	legacy: false,
 	locale: 'en',
 	fallbackLocale: 'en',
@@ -405,7 +405,7 @@ export class I18nClass {
 const loadedLanguages: string[] = [];
 
 export function setLanguage(locale: string) {
-	i18nInstance.global.locale.value = locale as 'en';
+	i18nInstance.global.locale.value = locale;
 	document.querySelector('html')!.setAttribute('lang', locale);
 
 	// Invalidate cached baseText results on locale change

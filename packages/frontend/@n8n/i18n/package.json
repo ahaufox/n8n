@@ -18,7 +18,8 @@
       "types": "./dist/*.d.mts",
       "import": "./dist/*.mjs",
       "require": "./dist/*.cjs"
-    }
+    },
+    "./locales/*.json": "./src/locales/*.json"
   },
   "scripts": {
     "dev": "tsdown --watch",

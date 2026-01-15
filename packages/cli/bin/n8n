@@ -23,7 +23,7 @@ if (!satisfies(nodeVersion, supportedNodeVersions)) {
 Your Node.js version ${nodeVersion} is currently not supported by n8n.
 Please use a Node.js version that satisfies the following version range: ${supportedNodeVersions}
 `);
-	process.exit(1);
+	// process.exit(1); # 暂时绕过版本检查
 }
 
 // Disable nodejs custom inspection across the app

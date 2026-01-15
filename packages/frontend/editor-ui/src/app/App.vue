@@ -16,6 +16,8 @@ import { useSettingsStore } from '@/app/stores/settings.store';
 import LoadingView from '@/app/views/LoadingView.vue';
 import { locale } from '@n8n/design-system';
 import { setLanguage } from '@n8n/i18n';
+import { loadLanguage } from '@n8n/i18n';
+import zhCN from '@n8n/i18n/locales/zh-CN.json';
 // Note: no need to import en.json here; default 'en' is handled via setLanguage
 import { useRootStore } from '@n8n/stores/useRootStore';
 import axios from 'axios';
@@ -68,7 +70,11 @@ watch(route, (r) => {
 watch(
 	defaultLocale,
 	async (newLocale) => {
-		setLanguage(newLocale);
+		if (newLocale === 'zh-CN') {
+			loadLanguage('zh-CN', zhCN as any);
+		} else {
+			setLanguage(newLocale);
+		}
 
 		axios.defaults.headers.common['Accept-Language'] = newLocale;
 
